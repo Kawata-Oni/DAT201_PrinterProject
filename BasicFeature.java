@@ -97,32 +97,63 @@ public class BasicFeature {
     }
 
     /**
-     * 4. แสดงรายการและลำดับของงานที่กำลังรอพิมพ์ทั้งหมด
+     * 4. แสดงรายการและลำดับของงานที่กำลังรอพิมพ์ทั้งหมดในรูปแบบตารางจัดคอลัมน์ตรงกัน
      * Big-O: O(n) โดย n คือจำนวนงานที่รออยู่ในคิว
      */
     public void displayQueue() {
-        System.out.println("\n==================== PRINT SPOOLER STATUS ====================");
+        System.out.println("\n======================================= PRINT SPOOLER STATUS =======================================");
         
         // แสดงงานที่กำลังพิมพ์อยู่ ณ ปัจจุบัน
         if (currentPrintingJob != null) {
-            System.out.println("[CURRENTLY PRINTING]: " + currentPrintingJob);
+            String priorityTag = currentPrintingJob.isUrgent() ? "[URGENT]" : "[NORMAL]";
+            System.out.printf("[CURRENTLY PRINTING]: %-8s | ID: %-7s | File: %-15s | Pages: %-4d | Time: %s\n",
+                    priorityTag,
+                    currentPrintingJob.getJobId(),
+                    currentPrintingJob.getFileName(),
+                    currentPrintingJob.getTotalPages(),
+                    currentPrintingJob.getTimestamp().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")));
         } else {
             System.out.println("[CURRENTLY PRINTING]: (Printer is IDLE)");
         }
         
-        System.out.println("--------------------------------------------------------------");
+        System.out.println("----------------------------------------------------------------------------------------------------");
         System.out.println("[WAITING QUEUE] (Total in queue: " + waitingQueue.size() + " job(s)):");
 
         if (waitingQueue.isEmpty()) {
             System.out.println("  (No jobs waiting in queue)");
         } else {
+            // หัวตาราง (Table Header)
+            System.out.println("  +----+----------+---------+-----------------+-------+---------+----------+");
+            System.out.println("  | No | Priority | Job ID  | File Name       | Pages | Status  | Time     |");
+            System.out.println("  +----+----------+---------+-----------------+-------+---------+----------+");
+
             int queuePosition = 1;
             // วนลูป Traverse ทุกโหนดใน Deque จากหัวไปท้าย (O(n))
             for (PrintJob job : waitingQueue) {
-                System.out.printf("  %d. %s\n", queuePosition, job.toString());
+                String priorityTag = job.isUrgent() ? "URGENT" : "NORMAL";
+                
+                // จัดช่องไฟให้ตรงกันทุกคอลัมน์:
+                // %-2d = ลำดับชิดซ้าย 2 ตัวอักษร
+                // %-8s = ความสำคัญ 8 ตัวอักษร
+                // %-7s = Job ID 7 ตัวอักษร
+                // %-15s = ชื่อไฟล์ 15 ตัวอักษร (ถ้าเกินจะตัดทอนให้อัตโนมัติเพื่อไม่ให้ตารางเบี้ยว)
+                String displayFileName = job.getFileName();
+                if (displayFileName.length() > 15) {
+                    displayFileName = displayFileName.substring(0, 12) + "...";
+                }
+
+                System.out.printf("  | %-2d | %-8s | %-7s | %-15s | %-5d | %-7s | %-8s |\n",
+                        queuePosition,
+                        priorityTag,
+                        job.getJobId(),
+                        displayFileName,
+                        job.getTotalPages(),
+                        job.getStatus(),
+                        job.getTimestamp().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")));
                 queuePosition++;
             }
+            System.out.println("  +----+----------+---------+-----------------+-------+---------+----------+");
         }
-        System.out.println("==============================================================\n");
+        System.out.println("====================================================================================================\n");
     }
 }
