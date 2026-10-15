@@ -1,0 +1,128 @@
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+/**
+ * คลาส BasicFeature: จัดการระบบคิวหลักของเครื่องพิมพ์ (ฟีเจอร์ที่ 1)
+ * โครงสร้างข้อมูลหลัก: Deque (Double-Ended Queue)
+ */
+public class BasicFeature {
+    // -------------------------------------------------------------
+    // Data Structures & Attributes
+    // -------------------------------------------------------------
+    // ใช้ Deque ในการเก็บคิวงานพิมพ์ที่กำลังรออยู่
+    private Deque<PrintJob> waitingQueue;
+    
+    // เก็บงานพิมพ์ที่กำลังพิมพ์อยู่ ณ ปัจจุบัน (ถ้าไม่มีจะเป็น null)
+    private PrintJob currentPrintingJob;
+
+    // -------------------------------------------------------------
+    // Constructor
+    // -------------------------------------------------------------
+    public BasicFeature() {
+        // ใช้ ArrayDeque ซึ่งรองรับการ addFirst, addLast, pollFirst ในเวลา O(1)
+        this.waitingQueue = new ArrayDeque<>();
+        this.currentPrintingJob = null;
+    }
+
+    // -------------------------------------------------------------
+    // Getter & Setter สำหรับเชื่อมต่อไปยังฟีเจอร์ 2 และ 3
+    // -------------------------------------------------------------
+    public Deque<PrintJob> getWaitingQueue() {
+        return waitingQueue;
+    }
+
+    public PrintJob getCurrentPrintingJob() {
+        return currentPrintingJob;
+    }
+
+    // -------------------------------------------------------------
+    // Core Methods (ฟังก์ชันหลักของฟีเจอร์ที่ 1)
+    // -------------------------------------------------------------
+
+    /**
+     * 1. เพิ่มงานปกติเข้าท้ายคิว (Normal Enqueue)
+     * Big-O: O(1)
+     */
+    public void enqueue(PrintJob job) {
+        if (job == null) return;
+        
+        job.setStatus("WAITING");
+        waitingQueue.addLast(job); // ต่อท้ายคิว
+        System.out.println(">> [SUCCESS] Normal job enqueued: " + job.getJobId() + " (" + job.getFileName() + ")");
+    }
+
+    /**
+     * 2. แทรกงานด่วนไว้หน้าคิวรอ (Urgent Enqueue)
+     * Big-O: O(1)
+     * หมายเหตุ: จะแทรกไว้หน้าสุดของคิวที่รออยู่ (หลังตัวที่กำลังพิมพ์อยู่ปัจจุบัน)
+     */
+    public void enqueueUrgent(PrintJob job) {
+        if (job == null) return;
+
+        job.setStatus("WAITING");
+        waitingQueue.addFirst(job); // แทรกหัวคิวรอทันที
+        System.out.println(">> [URGENT] Urgent job inserted to front: " + job.getJobId() + " (" + job.getFileName() + ")");
+    }
+
+    /**
+     * 3. ดึงงานถัดไปส่งให้เครื่องพิมพ์ (Process / Dequeue Next Job)
+     * Big-O: O(1)
+     * การทำงาน:
+     * - ถืองานที่พิมพ์อยู่เดิมเป็นเสร็จสิ้น (คืนค่ากลับไปเพื่อส่งให้ฟีเจอร์ 3 บันทึกประวัติ)
+     * - ดึงงานตัวแรกออกจาก waitingQueue มาเป็นงานที่กำลังพิมพ์ปัจจุบัน
+     * 
+     * @return PrintJob งานที่เพิ่งพิมพ์เสร็จสมบูรณ์ (เพื่อให้คลาสหลักส่งต่อให้ HistoryManager)
+     */
+    public PrintJob processNextJob() {
+        PrintJob finishedJob = null;
+
+        // 1. ถ้ามีงานที่กำลังพิมพ์อยู่เดิม ให้เปลี่ยนสถานะเป็น COMPLETED
+        if (currentPrintingJob != null) {
+            currentPrintingJob.setStatus("COMPLETED");
+            finishedJob = currentPrintingJob;
+            System.out.println(">> [FINISHED] Job " + finishedJob.getJobId() + " printed successfully!");
+            currentPrintingJob = null;
+        }
+
+        // 2. ดึงงานถัดไปจากหัวคิวรอขึ้นมาพิมพ์ (ถ้ามี)
+        if (!waitingQueue.isEmpty()) {
+            currentPrintingJob = waitingQueue.pollFirst(); // O(1)
+            currentPrintingJob.setStatus("PRINTING");
+            System.out.println(">> [PRINTING] Started printing: " + currentPrintingJob.getJobId() + " (" + currentPrintingJob.getFileName() + ")");
+        } else {
+            System.out.println(">> [INFO] Queue is empty. No jobs waiting.");
+        }
+
+        return finishedJob; // ส่งงานที่เพิ่งเสร็จกลับไปให้ระบบนำไปเข้า History
+    }
+
+    /**
+     * 4. แสดงรายการและลำดับของงานที่กำลังรอพิมพ์ทั้งหมด
+     * Big-O: O(n) โดย n คือจำนวนงานที่รออยู่ในคิว
+     */
+    public void displayQueue() {
+        System.out.println("\n==================== PRINT SPOOLER STATUS ====================");
+        
+        // แสดงงานที่กำลังพิมพ์อยู่ ณ ปัจจุบัน
+        if (currentPrintingJob != null) {
+            System.out.println("[CURRENTLY PRINTING]: " + currentPrintingJob);
+        } else {
+            System.out.println("[CURRENTLY PRINTING]: (Printer is IDLE)");
+        }
+        
+        System.out.println("--------------------------------------------------------------");
+        System.out.println("[WAITING QUEUE] (Total in queue: " + waitingQueue.size() + " job(s)):");
+
+        if (waitingQueue.isEmpty()) {
+            System.out.println("  (No jobs waiting in queue)");
+        } else {
+            int queuePosition = 1;
+            // วนลูป Traverse ทุกโหนดใน Deque จากหัวไปท้าย (O(n))
+            for (PrintJob job : waitingQueue) {
+                System.out.printf("  %d. %s\n", queuePosition, job.toString());
+                queuePosition++;
+            }
+        }
+        System.out.println("==============================================================\n");
+    }
+}
