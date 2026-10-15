@@ -27,47 +27,59 @@ public class MainPrinter {
             printerService.displayQueue();
 
             // เมนูคำสั่งหลัก
-            System.out.println("Choose Feature:");
-            System.out.println("[1] Add Normal Job");
-            System.out.println("[2] Add Urgent Job");
-            System.out.println("[3] Process Next Job");
-            System.out.println("[4] Search & Cancel Job (Feature 2)");
-            System.out.println("[5] View Job History & Reprint (Feature 3)");
+            System.out.println("Select an option:");
+            System.out.println("[1] Add Print Job");
+            System.out.println("[2] Process Next Job");
+            System.out.println("[3] Search & Cancel Job (Feature 2)");
+            System.out.println("[4] View Job History & Reprint (Feature 3)");
             System.out.println("[0] Exit Program");
             System.out.print("Please enter your choice (0-5): ");
 
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
-                case "1": // เพิ่มงานปกติ (Enqueue O(1))
-                    System.out.println("\n--- [1] Add Normal Job ---");
-                    System.out.print("Please enter the file name (e.g., Report.pdf): ");
-                    String normalFileName = scanner.nextLine().trim();
-                    if (normalFileName.isEmpty()) normalFileName = "Untitled.pdf";
+                case "1": // เพิ่มงานพิมพ์ (รวมทั้งงานปกติและงานด่วน)
+                    System.out.println("\n--- [1] Add Print Job ---");
+                    System.out.print("Enter file name (e.g., Report.pdf): ");
+                    String fileName = scanner.nextLine().trim();
+                    if (fileName.isEmpty()) fileName = "Untitled.pdf";
 
-                    System.out.print("Please enter the number of pages: ");
-                    int normalPages = readIntegerInput(scanner);
+                    System.out.print("Enter total pages: ");
+                    int totalPages = readIntegerInput(scanner);
 
-                    String normalJobId = "JOB-" + (jobCounter++);
-                    PrintJob normalJob = new PrintJob(normalJobId, normalFileName, normalPages, false);
-                    printerService.enqueue(normalJob);
+                    // ให้เลือกประเภทของงานพิมพ์
+                    System.out.println("Select job priority:");
+                    System.out.println("  [1] Normal Job");
+                    System.out.println("  [2] Urgent Job (VIP / Insert to Front)");
+                    System.out.print("Choose priority type (1-2): ");
+                    
+                    boolean isUrgent = false;
+                    while (true) {
+                        String priorityChoice = scanner.nextLine().trim();
+                        if (priorityChoice.equals("1")) {
+                            isUrgent = false;
+                            break;
+                        } else if (priorityChoice.equals("2")) {
+                            isUrgent = true;
+                            break;
+                        } else {
+                            System.out.print("Invalid choice. Please choose 1 (Normal) or 2 (Urgent): ");
+                        }
+                    }
+
+                    // สร้าง PrintJob Object
+                    String jobId = "JOB-" + (jobCounter++);
+                    PrintJob newJob = new PrintJob(jobId, fileName, totalPages, isUrgent);
+
+                    // เลือกว่าจะเรียก enqueue ท้ายคิว หรือ enqueueUrgent แทรกหัวคิว (O(1) ทั้งคู่)
+                    if (isUrgent) {
+                        printerService.enqueueUrgent(newJob);
+                    } else {
+                        printerService.enqueue(newJob);
+                    }
                     break;
 
-                case "2": // เพิ่มงานด่วน (Urgent Enqueue O(1))
-                    System.out.println("\n--- [2] Add Urgent Job ---");
-                    System.out.print("Please enter the file name (e.g., Urgent_Exam.pdf): ");
-                    String urgentFileName = scanner.nextLine().trim();
-                    if (urgentFileName.isEmpty()) urgentFileName = "Urgent_Doc.pdf";
-
-                    System.out.print("Please enter the number of pages: ");
-                    int urgentPages = readIntegerInput(scanner);
-
-                    String urgentJobId = "JOB-" + (jobCounter++);
-                    PrintJob urgentJob = new PrintJob(urgentJobId, urgentFileName, urgentPages, true);
-                    printerService.enqueueUrgent(urgentJob);
-                    break;
-
-                case "3": // ดึงงานไปพิมพ์ (Dequeue O(1))
+                case "2": // ดึงงานไปพิมพ์ (Dequeue O(1))
                     System.out.println("\n--- [3] Process Next Job ---");
                     PrintJob finishedJob = printerService.processNextJob();
                     
@@ -79,7 +91,7 @@ public class MainPrinter {
                     }
                     break;
 
-                case "4": // เตรียมไว้ให้ฟีเจอร์ที่ 2 (Search & Cancel)
+                case "3": // เตรียมไว้ให้ฟีเจอร์ที่ 2 (Search & Cancel)
                     System.out.println("\n--- [4] Search & Cancel Job (Feature 2) ---");
                     System.out.print("Please enter the Job ID you want to search/cancel (e.g., JOB-1): ");
                     String targetId = scanner.nextLine().trim();
@@ -88,7 +100,7 @@ public class MainPrinter {
                     System.out.println(">> [During Development]: sent targetId (" + targetId + ") to JobSearchManager search in Deque");
                     break;
 
-                case "5": // เตรียมไว้ให้ฟีเจอร์ที่ 3 (History & Reprint)
+                case "4": // เตรียมไว้ให้ฟีเจอร์ที่ 3 (History & Reprint)
                     System.out.println("\n--- [5] View Job History & Reprint (Feature 3) ---");
                     // TODO: ให้เพื่อนคนที่ 3 มาเขียนลอจิกเรียกใช้ตรงนี้
                     System.out.println(">> [During Development]: sent request to HistoryManager(Stack)");
