@@ -1,5 +1,7 @@
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * คลาส PrintJob: โมเดลข้อมูลพื้นฐานสำหรับงานพิมพ์ 1 ชิ้น
@@ -16,6 +18,8 @@ public class PrintJob {
     private String status;         // สถานะงาน: "WAITING", "PRINTING", "COMPLETED", "CANCELLED"
     private LocalDateTime timestamp; // เวลาที่ส่งเข้าคิว
 
+    private List<Integer> cancelledPages; // เก็บรายการเลขหน้าที่ถูกยกเลิก (เช่น หน้าที่ 7, 8, 10)
+
     // ตัวจัดรูปแบบการแสดงผลวันที่-เวลา
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -29,6 +33,7 @@ public class PrintJob {
         this.isUrgent = isUrgent;
         this.status = "WAITING";                  // สถานะเริ่มต้นเมื่อเข้าคิว
         this.timestamp = LocalDateTime.now();     // บันทึกเวลาปัจจุบันที่สร้างงาน
+        this.cancelledPages = new ArrayList<>();
     }
 
     // -------------------------------------------------------------
@@ -42,7 +47,13 @@ public class PrintJob {
         return fileName;
     }
 
+    // คืนค่าจำนวนหน้าที่เหลือจริง (จำนวนทั้งหมด - หน้าที่ถูกยกเลิกไปแล้วที่ไม่ซ้ำกัน)
     public int getTotalPages() {
+        int cancelledCount = (cancelledPages != null) ? cancelledPages.size() : 0;
+        return totalPages - cancelledCount;
+    }
+
+    public int getOriginalTotalPages() {
         return totalPages;
     }
 
@@ -62,6 +73,8 @@ public class PrintJob {
         return timestamp;
     }
 
+    public List<Integer> getCancelledPages() { return cancelledPages; }
+
     // -------------------------------------------------------------
     // Methods สำหรับซัพพอร์ตฟีเจอร์ต่างๆ
     // -------------------------------------------------------------
@@ -71,12 +84,77 @@ public class PrintJob {
      * @param pagesToCancel จำนวนหน้าที่ต้องการยกเลิก
      * @return boolean บอกผลลัพธ์ว่าลบสำเร็จหรือไม่
      */
-    public boolean cancelPages(int pagesToCancel) {
-        if (pagesToCancel > 0 && pagesToCancel < this.totalPages) {
-            this.totalPages -= pagesToCancel;
-            return true;
+    /**
+     * 1.1 ยกเลิกจากข้างหน้า (นับจากหน้าแรกไป N หน้า)
+     */
+    public boolean cancelFromFront(int n) {
+        if (n <= 0 || getTotalPages() <= 0) return false;
+        int count = 0;
+        for (int i = 1; i <= totalPages; i++) {
+            if (!cancelledPages.contains(i)) {
+                cancelledPages.add(i);
+                count++;
+                if (count == n) break;
+            }
         }
-        return false; // ไม่ให้ลบจนเหลือ 0 หรือติดลบ (ถ้าจะลบทั้งหมดควรใช้คำสั่งยกเลิกทั้ง Job)
+        return count > 0;
+    }
+
+    /**
+     * 1.2 ยกเลิกจากข้างหลัง (นับจากหน้าสุดท้ายถอยหลังมา N หน้า)
+     */
+    public boolean cancelFromBack(int n) {
+        if (n <= 0 || getTotalPages() <= 0) return false;
+        int count = 0;
+        for (int i = totalPages; i >= 1; i--) {
+            if (!cancelledPages.contains(i)) {
+                cancelledPages.add(i);
+                count++;
+                if (count == n) break;
+            }
+        }
+        return count > 0;
+    }
+
+    /**
+     * 1.3 ยกเลิกเลขหน้าเฉพาะเจาะจง (รองรับหลายหน้า เช่น "7" หรือ "3,5,8-10")
+     */
+    public boolean cancelSpecificPages(String pageInput) {
+        try {
+            String[] parts = pageInput.split(",");
+            boolean success = false;
+
+            for (String part : parts) {
+                part = part.trim();
+                if (part.contains("-")) {
+                    // กรณีระบุเป็นช่วง เช่น "5-8"
+                    String[] range = part.split("-");
+                    int start = Integer.parseInt(range[0].trim());
+                    int end = Integer.parseInt(range[1].trim());
+                    for (int p = start; p <= end; p++) {
+                        if (p >= 1 && p <= totalPages) {
+                            // ป้องกันการใส่เลขหน้าซ้ำกัน
+                            if (!cancelledPages.contains(p)) {
+                                cancelledPages.add(p);
+                            }
+                            success = true;
+                        }
+                    }
+                } else {
+                    // กรณีระบุหน้าเดี่ยวๆ เช่น "7"
+                    int p = Integer.parseInt(part);
+                    if (p >= 1 && p <= totalPages) {
+                        if (!cancelledPages.contains(p)) {
+                            cancelledPages.add(p);
+                        }
+                        success = true;
+                    }
+                }
+            }
+            return success;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -85,11 +163,14 @@ public class PrintJob {
     @Override
     public String toString() {
         String urgencyTag = isUrgent ? "[URGENT] " : "";
-        return String.format("%sID: %s | File: %s | Pages: %d | Status: %s | Time: %s",
+        String cancelInfo = cancelledPages.isEmpty() ? "" : " (Cancelled Pages: " + cancelledPages + ")";
+        return String.format("%sID: %s | File: %s | Pages: %d/%d%s | Status: %s | Time: %s",
                 urgencyTag,
                 jobId,
                 fileName,
-                totalPages,
+                getTotalPages(),
+                getOriginalTotalPages(),
+                cancelInfo,
                 status,
                 timestamp.format(FORMATTER));
     }

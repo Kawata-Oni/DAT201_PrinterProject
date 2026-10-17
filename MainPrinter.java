@@ -13,7 +13,7 @@ public class MainPrinter {
         BasicFeature printerService = new BasicFeature(); // ฟีเจอร์ที่ 1 (ของคุณ)
         
         // TODO: เมื่อเพื่อนทำฟีเจอร์ 2 และ 3 เสร็จ ให้นำมาประกาศใช้งานตรงนี้:
-        // JobSearchManager searchService = new JobSearchManager();
+        JobSearchManager jobSearchManager = new JobSearchManager();// ฟีเจอร์ที่ 2 (ของเพื่อนคนที่ 2)
         // HistoryManager historyService = new HistoryManager();
 
         System.out.println("==================================================");
@@ -30,7 +30,7 @@ public class MainPrinter {
             System.out.println("Select an option:");
             System.out.println("[1] Add Print Job");
             System.out.println("[2] Process Next Job");
-            System.out.println("[3] Search & Cancel Job (Feature 2)");
+            System.out.println("[3] Search & Cancel Job");
             System.out.println("[4] View Job History & Reprint (Feature 3)");
             System.out.println("[0] Exit Program");
             System.out.print("Please enter your choice (0-5): ");
@@ -91,13 +91,61 @@ public class MainPrinter {
                     }
                     break;
 
-                case "3": // เตรียมไว้ให้ฟีเจอร์ที่ 2 (Search & Cancel)
-                    System.out.println("\n--- [4] Search & Cancel Job (Feature 2) ---");
-                    System.out.print("Please enter the Job ID you want to search/cancel (e.g., JOB-1): ");
+                case "3": // ค้นหาและยกเลิกงานพิมพ์ (Feature 2)
+                    System.out.println("\n--- [3] Search & Cancel Job ---");
+                    System.out.print("Please enter the exact Job ID (e.g., JOB-1): ");
                     String targetId = scanner.nextLine().trim();
-                    
-                    // TODO: ให้เพื่อนคนที่ 2 มาเขียนลอจิกเรียกใช้ตรงนี้
-                    System.out.println(">> [During Development]: sent targetId (" + targetId + ") to JobSearchManager search in Deque");
+
+                    boolean exists = false;
+
+                    if (printerService.getCurrentPrintingJob() != null &&
+                            printerService.getCurrentPrintingJob().getJobId().equalsIgnoreCase(targetId)) {
+                        exists = true;
+                    } else {
+                        for (PrintJob job : printerService.getWaitingQueue()) {
+                            if (job.getJobId().equalsIgnoreCase(targetId)) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 2. ถ้าหาไม่เจอ ให้แสดงข้อความแล้ว break ออกเพื่อกลับหน้าเมนูหลักทันที
+                    if (!exists) {
+                        System.out.println(">> [INFO] Job ID \"" + targetId + "\" not found. Please add a job first.");
+                        break;
+                    }
+
+                    System.out.println("Select action:");
+                    System.out.println("  [1] Search Job Status & Estimate Time");
+                    System.out.println("  [2] Cancel Entire Job");
+                    System.out.println("  [3] Cancel Pages from Front or Back (Count)");
+                    System.out.println("  [4] Cancel Specific Page Numbers (e.g., 7 or 3,5,8-10)");
+                    System.out.print("Choose action (1-4): ");
+                    String actionChoice = scanner.nextLine().trim();
+
+                    if (actionChoice.equals("1")) {
+                        jobSearchManager.searchJob(printerService.getWaitingQueue(), printerService.getCurrentPrintingJob(), targetId);
+                    } else if (actionChoice.equals("2")) {
+                        jobSearchManager.cancelEntireJob(printerService.getWaitingQueue(), targetId);
+                    } else if (actionChoice.equals("3")) {
+                        System.out.println("Select direction:");
+                        System.out.println("  [1] From Front (First N pages)");
+                        System.out.println("  [2] From Back (Last N pages)");
+                        System.out.print("Choose direction (1-2): ");
+                        String dirChoice = scanner.nextLine().trim();
+
+                        System.out.print("Enter number of pages to cancel: ");
+                        int count = readIntegerInput(scanner);
+
+                        jobSearchManager.cancelPagesByPosition(printerService.getWaitingQueue(), targetId, dirChoice.equals("1"), count);
+                    } else if (actionChoice.equals("4")) {
+                        System.out.print("Enter page numbers to cancel (e.g. 7 or 2,4,6-8): ");
+                        String pageInput = scanner.nextLine().trim();
+                        jobSearchManager.cancelSpecificPages(printerService.getWaitingQueue(), targetId, pageInput);
+                    } else {
+                        System.out.println(">> [Warning] Invalid action choice.");
+                    }
                     break;
 
                 case "4": // เตรียมไว้ให้ฟีเจอร์ที่ 3 (History & Reprint)
