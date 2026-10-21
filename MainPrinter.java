@@ -15,6 +15,9 @@ public class MainPrinter {
         // TODO: เมื่อเพื่อนทำฟีเจอร์ 2 และ 3 เสร็จ ให้นำมาประกาศใช้งานตรงนี้:
         JobSearchManager jobSearchManager = new JobSearchManager();// ฟีเจอร์ที่ 2 (ของเพื่อนคนที่ 2)
         // HistoryManager historyService = new HistoryManager();
+        
+        HistoryManager historyService = new HistoryManager();
+        //ประกาศใช้งานHistoryManager อันนี้คือฟีเจอร์3ที่เพิ่มเข้ามา (edit by นายพุทธ😁)
 
         System.out.println("==================================================");
         System.out.println("   PRINT SPOOLER DEMO (Java Console Application)");
@@ -31,7 +34,7 @@ public class MainPrinter {
             System.out.println("[1] Add Print Job");
             System.out.println("[2] Process Next Job");
             System.out.println("[3] Search & Cancel Job");
-            System.out.println("[4] View Job History & Reprint (Feature 3)");
+            System.out.println("[4] View Job History & Reprint");
             System.out.println("[0] Exit Program");
             System.out.print("Please enter your choice (0-5): ");
 
@@ -80,7 +83,7 @@ public class MainPrinter {
                     break;
 
                 case "2": // ดึงงานไปพิมพ์ (Dequeue O(1))
-                    System.out.println("\n--- [3] Process Next Job ---");
+                    System.out.println("\n--- [2] Process Next Job ---");
                     PrintJob finishedJob = printerService.processNextJob();
                     
                     // หากมีงานเดิมที่พิมพ์เสร็จ จะส่งต่อให้ฟีเจอร์ที่ 3 บันทึกประวัติ
@@ -88,6 +91,7 @@ public class MainPrinter {
                         System.out.println(">> Notification: Job " + finishedJob.getJobId() + " has been recorded in the history.");
                         // TODO: เชื่อมกับฟีเจอร์ที่ 3
                         // historyService.recordHistory(finishedJob);
+                        historyService.recordHistory(finishedJob); //เพิ่มบรรทัดนี้เข้าไปนะ Add by นายพุทธ😁
                     }
                     break;
 
@@ -109,6 +113,8 @@ public class MainPrinter {
                             }
                         }
                     }
+                    
+                    
 
                     // 2. ถ้าหาไม่เจอ ให้แสดงข้อความแล้ว break ออกเพื่อกลับหน้าเมนูหลักทันที
                     if (!exists) {
@@ -148,11 +154,29 @@ public class MainPrinter {
                     }
                     break;
 
-                case "4": // เตรียมไว้ให้ฟีเจอร์ที่ 3 (History & Reprint)
-                    System.out.println("\n--- [5] View Job History & Reprint (Feature 3) ---");
-                    // TODO: ให้เพื่อนคนที่ 3 มาเขียนลอจิกเรียกใช้ตรงนี้
-                    System.out.println(">> [During Development]: sent request to HistoryManager(Stack)");
+                case "4": // ระบบประวัติและพิมพ์ซ้ำ Feature 3 ของ ณัฐเมศร์
+                    System.out.println("\n--- [4] View Job History & Reprint ---");
+                    historyService.displayHistory();
+                    
+                    if (!historyService.isEmpty()) {
+                    System.out.println("Select action:");
+                    System.out.println("  [1] Reprint Last Job (Push back to queue)");
+                    System.out.println("  [2] Clear History");
+                    System.out.println("  [0] Back to main menu");
+                    System.out.print("Choose action (0-2): ");
+                    String historyChoice = scanner.nextLine().trim();
+
+                    if (historyChoice.equals("1")) {
+                        PrintJob reEnqueuedJob = historyService.reprintLastJob();
+                        if (reEnqueuedJob != null) {
+                            printerService.enqueue(reEnqueuedJob); // นำงานกลับเข้าคิวรอพิมพ์ปกติ
+                        }
+                    } else if (historyChoice.equals("2")) {
+                        historyService.clearHistory();
+                    }
+                   }
                     break;
+                    // Edit by นายพุทธ 😁
 
                 case "0":
                     System.out.println("\n>> [Notification] Shutting down the program... Thank you for using the service.");
