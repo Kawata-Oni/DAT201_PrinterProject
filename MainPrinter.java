@@ -33,8 +33,9 @@ public class MainPrinter {
             System.out.println("Select an option:");
             System.out.println("[1] Add Print Job");
             System.out.println("[2] Process Next Job");
-            System.out.println("[3] Search & Cancel Job");
-            System.out.println("[4] View Job History & Reprint");
+            System.out.println("[3] Sort Waiting Queue");
+            System.out.println("[4] Search & Cancel Job");
+            System.out.println("[5] View Job History & Reprint");
             System.out.println("[0] Exit Program");
             System.out.print("Please enter your choice (0-5): ");
 
@@ -95,8 +96,18 @@ public class MainPrinter {
                     }
                     break;
 
-                case "3": // ค้นหาและยกเลิกงานพิมพ์ (Feature 2)
-                    System.out.println("\n--- [3] Search & Cancel Job ---");
+                case "3":
+                    System.out.println("\n--- [3] SORT WAITING QUEUE (URGENT & SHORTEST JOB FIRST) ---");
+                    if (printerService.getWaitingQueue().isEmpty()) {
+                        System.out.println(">> [WARNING] Cannot sort: Queue is currently empty.");
+                    } else {
+                        printerService.sortByUrgentAndPages();
+                        printerService.displayQueue();
+                    }
+                    break;
+
+                case "4": // ค้นหาและยกเลิกงานพิมพ์ (Feature 2)
+                    System.out.println("\n--- [4] Search & Cancel Job ---");
                     System.out.print("Please enter the exact Job ID (e.g., JOB-1): ");
                     String targetId = scanner.nextLine().trim();
 
@@ -154,8 +165,8 @@ public class MainPrinter {
                     }
                     break;
 
-                case "4": // ระบบประวัติและพิมพ์ซ้ำ Feature 3 ของ ณัฐเมศร์
-                    System.out.println("\n--- [4] View Job History & Reprint ---");
+                case "5": // ระบบประวัติและพิมพ์ซ้ำ Feature 3 ของ ณัฐเมศร์
+                    System.out.println("\n--- [5] View Job History & Reprint ---");
                     historyService.displayHistory();
                     
                     if (!historyService.isEmpty()) {
