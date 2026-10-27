@@ -1,5 +1,7 @@
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * คลาส BasicFeature: จัดการระบบคิวหลักของเครื่องพิมพ์ (ฟีเจอร์ที่ 1)
@@ -155,5 +157,59 @@ public class BasicFeature {
             System.out.println("  +----+----------+---------+-----------------+-------+---------+----------+");
         }
         System.out.println("====================================================================================================\n");
+    }
+
+       /**
+    * จัดเรียงคิวรอพิมพ์ใหม่:
+    * 1. งานเร่งด่วน (Urgent) ขึ้นก่อนงานปกติ
+    * 2. หากสถานะความด่วนเท่ากัน เรียงตามจำนวนหน้าน้อยไปมาก (Ascending)
+    * ใช้อัลกอริทึม: Insertion Sort
+    * Big-O: O(n^2)
+    */
+    public void sortByUrgentAndPages() {
+       if (waitingQueue == null || waitingQueue.size() <= 1) {
+            return;
+        }
+
+        // แปลง Deque เป็น List ชั่วคราวเพื่อให้สลับตำแหน่งตาม Index ได้ง่าย
+        List<PrintJob> list = new ArrayList<>(waitingQueue);
+
+        // Insertion Sort
+        for (int i = 1; i < list.size(); i++) {
+          PrintJob key = list.get(i);
+         int j = i - 1;
+
+          // วนลูปเปรียบเทียบเพื่อหาตำแหน่งแทรกที่ถูกต้อง
+          while (j >= 0 && compareJobs(list.get(j), key) > 0) {
+              list.set(j + 1, list.get(j));
+              j--;
+          }
+          list.set(j + 1, key);
+      }
+
+       // ล้าง Deque เดิมและใส่ข้อมูลที่เรียงลำดับเสร็จแล้วกลับเข้าไป
+      waitingQueue.clear();
+      waitingQueue.addAll(list);
+
+      System.out.println(">> [SORTED] Queue reordered: Urgent first, followed by smallest page count.");
+    }
+
+    /**
+    * Helper Method สำหรับเปรียบเทียบลำดับระหว่างสองงาน:
+    * คืนค่า > 0 ถ้า job1 ควรอยู่หลัง job2
+    * คืนค่า < 0 ถ้า job1 ควรอยู่ก่อน job2
+    * คืนค่า 0 ถ้ามีลำดับเท่ากัน
+    */
+    private int compareJobs(PrintJob job1, PrintJob job2) {
+        // เงื่อนไขที่ 1: เปรียบเทียบความเร่งด่วน (Urgent มาก่อน Normal)
+        if (job1.isUrgent() && !job2.isUrgent()) {
+            return -1; // job1 (urgent) มาก่อน
+        }
+        if (!job1.isUrgent() && job2.isUrgent()) {
+            return 1;  // job2 (urgent) มาก่อน -> job1 ถอยไปหลัง
+        }
+
+        // เงื่อนไขที่ 2: ถ้าความเร่งด่วนเท่ากัน ดูที่จำนวนหน้า (หน้าน้อยมาก่อน)
+        return Integer.compare(job1.getTotalPages(), job2.getTotalPages());
     }
 }
