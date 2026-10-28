@@ -1,18 +1,15 @@
 import java.util.Deque;
 import java.util.Iterator;
 
-/**
- * คลาส JobSearchManager: จัดการระบบค้นหาสถานะ/เวลาคาดการณ์ และยกเลิกงานพิมพ์ (ฟีเจอร์ที่ 2)
- */
+
 public class JobSearchManager {
 
-    // กำหนดเวลาเฉลี่ยในการพิมพ์ต่อ 1 หน้า (หน่วยเป็นวินาที เช่น 3 วินาทีต่อหน้า)
+    // กำหนดเวลาเฉลี่ยในการพิมพ์ต่อ 1 หน้า
     private static final int SECONDS_PER_PAGE = 3;
 
-    /**
-     * ฟังก์ชันค้นหางานพิมพ์ (Search Job ID & Status Estimate)
-     * ค้นหา Job ID ในคิวรอ พร้อมคำนวณลำดับที่และเวลาโดยประมาณที่ต้องรอก่อนถึงคิว
-     */
+
+     //ค้นหา Job ID ในคิวรอ พร้อมคำนวณลำดับที่และเวลาโดยประมาณที่ต้องรอก่อนถึงคิว
+
     public void searchJob(Deque<PrintJob> waitingQueue, PrintJob currentPrintingJob, String targetJobId) {
         if (targetJobId == null || targetJobId.isEmpty()) {
             System.out.println(">> [WARNING] Please enter a valid Job ID to search.");
@@ -59,9 +56,9 @@ public class JobSearchManager {
         }
     }
 
-    /**
-     * ฟังก์ชันยกเลิกทั้ง Job ออกจากคิวทันที
-     */
+
+     //ยกเลิกทั้ง Job ออกจากคิวทันที
+
     public void cancelEntireJob(Deque<PrintJob> waitingQueue, String targetJobId) {
         if (targetJobId == null || targetJobId.isEmpty()) {
             System.out.println(">> [WARNING] Please enter a valid Job ID.");
@@ -86,9 +83,9 @@ public class JobSearchManager {
         }
     }
 
-    /**
-     * ฟังก์ชันยกเลิกแบบนับจากหน้า หรือจากหลัง
-     */
+
+     //ยกเลิกแบบนับจากหน้า หรือจากหลัง
+
     public void cancelPagesByPosition(Deque<PrintJob> waitingQueue, String targetJobId, boolean fromFront, int count) {
         PrintJob targetJob = findJobInQueue(waitingQueue, targetJobId);
         if (targetJob == null) {
@@ -105,9 +102,9 @@ public class JobSearchManager {
         }
     }
 
-    /**
-     * ฟังก์ชันยกเลิกเลขหน้าเฉพาะเจาะจง (รองรับหลายหน้า เช่น 7 หรือ 3,5,8-10)
-     */
+
+     //ยกเลิกเลขหน้าเฉพาะเจาะจง (รองรับหลายหน้า เช่น 7 หรือ 3,5,8-10)
+
     public void cancelSpecificPages(Deque<PrintJob> waitingQueue, String targetJobId, String pageInput) {
         PrintJob targetJob = findJobInQueue(waitingQueue, targetJobId);
         if (targetJob == null) {
@@ -123,9 +120,9 @@ public class JobSearchManager {
         }
     }
 
-    /**
-     * Helper Method: ค้นหางานในคิวรอ
-     */
+
+     //ค้นหางานในคิวรอ
+
     private PrintJob findJobInQueue(Deque<PrintJob> waitingQueue, String targetJobId) {
         for (PrintJob job : waitingQueue) {
             if (job.getJobId().equalsIgnoreCase(targetJobId)) {
@@ -135,9 +132,9 @@ public class JobSearchManager {
         return null;
     }
 
-    /**
-     * Helper Method สำหรับแปลงวินาทีเป็นรูปแบบ นาที:วินาที ให้อ่านง่าย
-     */
+
+     //แปลงวินาทีเป็นรูปแบบ นาที:วินาที ให้อ่านง่าย
+
     private String formatSecondsToTime(int totalSeconds) {
         if (totalSeconds == 0) return "0 seconds (Ready to print next)";
         int minutes = totalSeconds / 60;

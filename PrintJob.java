@@ -73,20 +73,14 @@ public class PrintJob {
         return timestamp;
     }
 
-    public List<Integer> getCancelledPages() { return cancelledPages; }
 
     // -------------------------------------------------------------
     // Methods สำหรับซัพพอร์ตฟีเจอร์ต่างๆ
     // -------------------------------------------------------------
 
-    /**
-     * ฟังก์ชันรองรับ ฟีเจอร์ที่ 2: ยกเลิกเฉพาะหน้า (ลดจำนวนหน้าลง)
-     * @param pagesToCancel จำนวนหน้าที่ต้องการยกเลิก
-     * @return boolean บอกผลลัพธ์ว่าลบสำเร็จหรือไม่
-     */
-    /**
-     * 1.1 ยกเลิกจากข้างหน้า (นับจากหน้าแรกไป N หน้า)
-     */
+
+     //ยกเลิกจากข้างหน้า (นับจากหน้าแรกไป N หน้า)
+
     public boolean cancelFromFront(int n) {
         if (n <= 0 || getTotalPages() <= 0) return false;
         int count = 0;
@@ -100,9 +94,9 @@ public class PrintJob {
         return count > 0;
     }
 
-    /**
-     * 1.2 ยกเลิกจากข้างหลัง (นับจากหน้าสุดท้ายถอยหลังมา N หน้า)
-     */
+
+     //ยกเลิกจากข้างหลัง (นับจากหน้าสุดท้ายถอยหลังมา N หน้า)
+
     public boolean cancelFromBack(int n) {
         if (n <= 0 || getTotalPages() <= 0) return false;
         int count = 0;
@@ -116,9 +110,9 @@ public class PrintJob {
         return count > 0;
     }
 
-    /**
-     * 1.3 ยกเลิกเลขหน้าเฉพาะเจาะจง (รองรับหลายหน้า เช่น "7" หรือ "3,5,8-10")
-     */
+
+     //ยกเลิกเลขหน้าเฉพาะเจาะจง (รองรับหลายหน้า เช่น "7" หรือ "3,5,8-10")
+
     public boolean cancelSpecificPages(String pageInput) {
         try {
             String[] parts = pageInput.split(",");
