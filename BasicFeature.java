@@ -3,31 +3,28 @@ import java.util.Deque;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * คลาส BasicFeature: จัดการระบบคิวหลักของเครื่องพิมพ์ (ฟีเจอร์ที่ 1)
- * โครงสร้างข้อมูลหลัก: Deque (Double-Ended Queue)
- */
+// Data Structure : Deque (Double-Ended Queue)
+
 public class BasicFeature {
     // -------------------------------------------------------------
     // Data Structures & Attributes
     // -------------------------------------------------------------
-    // ใช้ Deque ในการเก็บคิวงานพิมพ์ที่กำลังรออยู่
-    private Deque<PrintJob> waitingQueue;
     
-    // เก็บงานพิมพ์ที่กำลังพิมพ์อยู่ ณ ปัจจุบัน (ถ้าไม่มีจะเป็น null)
-    private PrintJob currentPrintingJob;
+    private Deque<PrintJob> waitingQueue; // เก็บงานพิมพ์ที่รออยู่ในคิว
+    
+    private PrintJob currentPrintingJob; // เก็บงานพิมพ์ที่กำลังพิมพ์อยู่ (ถ้าไม่มีงานพิมพ์อยู่ ให้เป็น null)
 
     // -------------------------------------------------------------
     // Constructor
     // -------------------------------------------------------------
     public BasicFeature() {
-        // ใช้ ArrayDeque ซึ่งรองรับการ addFirst, addLast, pollFirst ในเวลา O(1)
-        this.waitingQueue = new ArrayDeque<>();
+        
+        this.waitingQueue = new ArrayDeque<>(); // ใช้ ArrayDeque เพราะทำงานเป็น queue ได้ดี (มี firstPoll, addLast, addFirst)
         this.currentPrintingJob = null;
     }
 
     // -------------------------------------------------------------
-    // Getter & Setter สำหรับเชื่อมต่อไปยังฟีเจอร์ 2 และ 3
+    // Getter & Setter
     // -------------------------------------------------------------
     public Deque<PrintJob> getWaitingQueue() {
         return waitingQueue;
@@ -38,13 +35,11 @@ public class BasicFeature {
     }
 
     // -------------------------------------------------------------
-    // Core Methods (ฟังก์ชันหลักของฟีเจอร์ที่ 1)
+    // Methods Feature 1
     // -------------------------------------------------------------
 
-    /**
-     * 1. เพิ่มงานปกติเข้าท้ายคิว (Normal Enqueue)
-     * Big-O: O(1)
-     */
+    // 1. เพิ่มงานปกติลงท้าย waitingQueue
+    // Big-O: O(1)
     public void enqueue(PrintJob job) {
         if (job == null) return;
         
@@ -53,11 +48,8 @@ public class BasicFeature {
         System.out.println(">> [SUCCESS] Normal job enqueued: " + job.getJobId() + " (" + job.getFileName() + ")");
     }
 
-    /**
-     * 2. แทรกงานด่วนไว้หน้าคิวรอ (Urgent Enqueue)
-     * Big-O: O(1)
-     * หมายเหตุ: จะแทรกไว้หน้าสุดของคิวที่รออยู่ (หลังตัวที่กำลังพิมพ์อยู่ปัจจุบัน)
-     */
+    // 2. แทรกงานด่วนไว้หน้า waitingQueue
+    // Big-O: O(1)
     public void enqueueUrgent(PrintJob job) {
         if (job == null) return;
 
@@ -66,19 +58,12 @@ public class BasicFeature {
         System.out.println(">> [URGENT] Urgent job inserted to front: " + job.getJobId() + " (" + job.getFileName() + ")");
     }
 
-    /**
-     * 3. ดึงงานถัดไปส่งให้เครื่องพิมพ์ (Process / Dequeue Next Job)
-     * Big-O: O(1)
-     * การทำงาน:
-     * - ถืองานที่พิมพ์อยู่เดิมเป็นเสร็จสิ้น (คืนค่ากลับไปเพื่อส่งให้ฟีเจอร์ 3 บันทึกประวัติ)
-     * - ดึงงานตัวแรกออกจาก waitingQueue มาเป็นงานที่กำลังพิมพ์ปัจจุบัน
-     * 
-     * @return PrintJob งานที่เพิ่งพิมพ์เสร็จสมบูรณ์ (เพื่อให้คลาสหลักส่งต่อให้ HistoryManager)
-     */
+    // 3. ดึงงานถัดไปส่งให้เครื่องพิมพ์
+    // Big-O: O(1)
     public PrintJob processNextJob() {
         PrintJob finishedJob = null;
 
-        // 1. ถ้ามีงานที่กำลังพิมพ์อยู่เดิม ให้เปลี่ยนสถานะเป็น COMPLETED
+        // ถ้ามีงานที่กำลังพิมพ์อยู่เดิม ให้เปลี่ยนสถานะเป็น COMPLETED
         if (currentPrintingJob != null) {
             currentPrintingJob.setStatus("COMPLETED");
             finishedJob = currentPrintingJob;
@@ -86,7 +71,7 @@ public class BasicFeature {
             currentPrintingJob = null;
         }
 
-        // 2. ดึงงานถัดไปจากหัวคิวรอขึ้นมาพิมพ์ (ถ้ามี)
+        // ดึงงานถัดไปจากหัวคิวรอขึ้นมาพิมพ์ (ถ้ามี)
         if (!waitingQueue.isEmpty()) {
             currentPrintingJob = waitingQueue.pollFirst(); // O(1)
             currentPrintingJob.setStatus("PRINTING");
@@ -98,10 +83,8 @@ public class BasicFeature {
         return finishedJob; // ส่งงานที่เพิ่งเสร็จกลับไปให้ระบบนำไปเข้า History
     }
 
-    /**
-     * 4. แสดงรายการและลำดับของงานที่กำลังรอพิมพ์ทั้งหมดในรูปแบบตารางจัดคอลัมน์ตรงกัน
-     * Big-O: O(n) โดย n คือจำนวนงานที่รออยู่ในคิว
-     */
+    //4. แสดงรายการและลำดับของงานที่กำลังรอพิมพ์ทั้งหมดในรูปแบบตารางจัดคอลัมน์ตรงกัน
+    //Big-O: O(n)
     public void displayQueue() {
         System.out.println("\n======================================= PRINT SPOOLER STATUS =======================================");
         
@@ -130,7 +113,8 @@ public class BasicFeature {
             System.out.println("  +----+----------+---------+-----------------+-------+---------+----------+");
 
             int queuePosition = 1;
-            // วนลูป Traverse ทุกโหนดใน Deque จากหัวไปท้าย (O(n))
+            // Traverse ทุกโหนดใน Deque จากหัวไปท้าย
+            // BigO : O(n)
             for (PrintJob job : waitingQueue) {
                 String priorityTag = job.isUrgent() ? "URGENT" : "NORMAL";
                 
@@ -159,13 +143,8 @@ public class BasicFeature {
         System.out.println("====================================================================================================\n");
     }
 
-       /**
-    * จัดเรียงคิวรอพิมพ์ใหม่:
-    * 1. งานเร่งด่วน (Urgent) ขึ้นก่อนงานปกติ
-    * 2. หากสถานะความด่วนเท่ากัน เรียงตามจำนวนหน้าน้อยไปมาก (Ascending)
-    * ใช้อัลกอริทึม: Insertion Sort
-    * Big-O: O(n^2)
-    */
+    // 5. จัดเรียงลำดับงานใน waitingQueue โดยให้ Urgent Jobs มาก่อน และถ้าเป็นประเภทเดียวกัน ให้เรียงตามจำนวนหน้าที่น้อยที่สุดมาก่อน
+    // Insertion Sort => Big-O: O(n^2)
     public void sortByUrgentAndPages() {
        if (waitingQueue == null || waitingQueue.size() <= 1) {
             return;
@@ -194,14 +173,13 @@ public class BasicFeature {
       System.out.println(">> [SORTED] Queue reordered: Urgent first, followed by smallest page count.");
     }
 
-    /**
-    * Helper Method สำหรับเปรียบเทียบลำดับระหว่างสองงาน:
-    * คืนค่า > 0 ถ้า job1 ควรอยู่หลัง job2
-    * คืนค่า < 0 ถ้า job1 ควรอยู่ก่อน job2
-    * คืนค่า 0 ถ้ามีลำดับเท่ากัน
-    */
+    // Method สำหรับเปรียบเทียบลำดับระหว่างสองงาน:
+    // คืนค่า > 0 ถ้า job1 ควรอยู่หลัง job2
+    // คืนค่า < 0 ถ้า job1 ควรอยู่ก่อน job2
+    // คืนค่า 0 ถ้ามีลำดับเท่ากัน
+    
     private int compareJobs(PrintJob job1, PrintJob job2) {
-        // เงื่อนไขที่ 1: เปรียบเทียบความเร่งด่วน (Urgent มาก่อน Normal)
+        // condition 1: เปรียบเทียบความเร่งด่วน (Urgent มาก่อน Normal)
         if (job1.isUrgent() && !job2.isUrgent()) {
             return -1; // job1 (urgent) มาก่อน
         }
@@ -209,7 +187,7 @@ public class BasicFeature {
             return 1;  // job2 (urgent) มาก่อน -> job1 ถอยไปหลัง
         }
 
-        // เงื่อนไขที่ 2: ถ้าความเร่งด่วนเท่ากัน ดูที่จำนวนหน้า (หน้าน้อยมาก่อน)
+        // condition 2: ถ้าความเร่งด่วนเท่ากัน ดูที่จำนวนหน้า (หน้าน้อยมาก่อน)
         return Integer.compare(job1.getTotalPages(), job2.getTotalPages());
     }
 }
