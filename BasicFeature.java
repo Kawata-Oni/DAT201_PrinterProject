@@ -155,8 +155,8 @@ public class BasicFeature {
 
         // Insertion Sort
         for (int i = 1; i < list.size(); i++) {
-          PrintJob key = list.get(i);
-         int j = i - 1;
+            PrintJob key = list.get(i);
+            int j = i - 1;
 
           // วนลูปเปรียบเทียบเพื่อหาตำแหน่งแทรกที่ถูกต้อง
           while (j >= 0 && compareJobs(list.get(j), key) > 0) {
@@ -174,8 +174,8 @@ public class BasicFeature {
     }
 
     // Method สำหรับเปรียบเทียบลำดับระหว่างสองงาน:
-    // คืนค่า > 0 ถ้า job1 ควรอยู่หลัง job2
-    // คืนค่า < 0 ถ้า job1 ควรอยู่ก่อน job2
+    // คืนค่า -1 ถ้า job1 ควรอยู่ก่อน job2
+    // คืนค่า 1 ถ้า job1 ควรอยู่หลัง job2
     // คืนค่า 0 ถ้ามีลำดับเท่ากัน
     
     private int compareJobs(PrintJob job1, PrintJob job2) {
